@@ -1,3 +1,3 @@
-ssid="sp2-john!!";
+ssid="smartpower2";
 ipaddr="192.168.4.1";
 passwd="12345678";
