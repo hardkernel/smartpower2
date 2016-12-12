@@ -12,6 +12,9 @@
 
 #define USE_SERIAL Serial
 
+#define MAX_LCD_SSID_LENGTH	12
+#define MAX_LCD_IP_LENGTH	14
+
 #define ON	0
 #define OFF	1
 #define HOME    0
@@ -256,28 +259,27 @@ void handleClientData(uint8_t num, String data)
 		break;
 	}
 	case SAVE_NETWORKS: {
-            String _ssid = data.substring(1, data.indexOf(','));
-            data.remove(1, data.indexOf(','));
-            String _ipaddr = data.substring(1, data.indexOf(','));
-            data.remove(1, data.indexOf(','));
-            String _password = data.substring(1, data.indexOf(','));
-            if ((String(ssid) != _ssid) || (ip.toString() != _ipaddr) ||
-                                (String(password) != _password)) {
-                File f = SPIFFS.open("/js/settings.js", "w");
-                f.println("ssid=\"" + _ssid + "\"");
-                f.println("ipaddr=\"" + _ipaddr + "\"");
-                f.println("passwd=\"" + _password + "\"");
-                f.flush();
-                f.close();
-                readNetworkConfig();
-                for (int i = 0; i < 5; i++) {
-                    if (client_sp2[i].connected && client_sp2[i].page && (num != i))
-                        sendStatus(i, 1);
-                }
-            }
-
-            break;
-        }
+        String _ssid = data.substring(1, data.indexOf(','));
+        data.remove(1, data.indexOf(','));
+        String _ipaddr = data.substring(1, data.indexOf(','));
+        data.remove(1, data.indexOf(','));
+        String _password = data.substring(1, data.indexOf(','));
+        if ((String(ssid) != _ssid) || (ip.toString() != _ipaddr) ||
+										(String(password) != _password)) {
+			File f = SPIFFS.open("/js/settings.js", "w");
+			f.println("ssid=\"" + _ssid + "\"");
+			f.println("ipaddr=\"" + _ipaddr + "\"");
+			f.println("passwd=\"" + _password + "\"");
+			f.flush();
+			f.close();
+			readNetworkConfig();
+			for (int i = 0; i < 5; i++) {
+				if (client_sp2[i].connected && client_sp2[i].page && (num != i))
+					sendStatus(i, 1);
+			}
+		}
+		break;
+	}
 	case MEASUREWATTHOUR:
 		measureWh = data.substring(1).toInt();
 		send_data_to_clients(String(MEASUREWATTHOUR) + measureWh, HOME, num);
@@ -311,18 +313,19 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         connectedWeb = 0;
         break;
     case WStype_CONNECTED : {
-            IPAddress ip = webSocket.remoteIP(num);
-            USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n\r", num, ip[0], ip[1], ip[2], ip[3], payload);
-            client_sp2[num].connected = 1;
-            connectedWeb = 1;
-        }
-        break;
+		IPAddress ip = webSocket.remoteIP(num);
+		USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n\r",
+									num, ip[0], ip[1], ip[2], ip[3], payload);
+		client_sp2[num].connected = 1;
+		connectedWeb = 1;
+		break;
+	}
     case WStype_TEXT : {
-            handleClientData(num, String((char *)&payload[0]));
-        }
-        break;
+		handleClientData(num, String((char *)&payload[0]));
+		break;
+	}
     case WStype_BIN :
-        USE_SERIAL.printf("[%u] get binary lenght: %u\n\r", num, lenght);
+		USE_SERIAL.printf("[%u] get binary lenght: %u\n\r", num, lenght);
         hexdump(payload, lenght);
         break;
     }
@@ -428,53 +431,96 @@ void printPower_LCD(void)
 
 	lcd.setCursor(0, 1);
 	if (watt < 10) {
-			lcd.print(watt, 3);
+		lcd.print(watt, 3);
 	} else {
-			lcd.print(watt, 2);
+		lcd.print(watt, 2);
 	}
 	lcd.print(" W ");
 
 	if (watth < 10) {
-			lcd.print(watth, 3);
+		lcd.print(watth, 3);
+		lcd.print(" ");
 	} else if (watth < 100) {
-			lcd.print(watth, 2);
+		lcd.print(watth, 2);
+		lcd.print(" ");
+	} else if (watth < 1000) {
+		lcd.print(watth, 1);
+		lcd.print(" ");
 	} else {
-			lcd.print(watth, 1);
+		lcd.print(watth/1000, 0);
+		lcd.print(" K");
 	}
-	lcd.print(" Wh ");
+	lcd.print("Wh     ");
 }
 
 uint8_t cnt_ssid;
-uint8_t cursor_lcd;
+int8_t cnt_ip;
+int8_t cursor_ssid;
+int8_t cursor_ip;
 void printInfo_LCD(void)
 {
-	for (int i = 0; i < 30; i++) {
-		if (ssid[i] == '\0') {
-			cnt_ssid = i;
-			break;
-		}
-	}
-
+	String str;
+	int i;
+	cnt_ssid = String(ssid).length();
 	lcd.setCursor(0, 0);
 	lcd.print("SSID:");
-	lcd.print(ssid);
-	if (cnt_ssid < 11) {
-		for (int i = 0; i < 11 - cnt_ssid; i++) {
+	str = String(ssid);
+	if (cnt_ssid < MAX_LCD_SSID_LENGTH) {
+		lcd.print(str);
+		for (i = 0; i < MAX_LCD_SSID_LENGTH; i++) {
 			lcd.print(" ");
+		}
+	} else {
+		if ((cursor_ssid - 5) == cnt_ssid) {
+			cursor_ssid = 0;
+		}
+		lcd.print(str.substring(cursor_ssid++));
+		if ((cnt_ssid - cursor_ssid) < MAX_LCD_SSID_LENGTH - 5) {
+			if (cnt_ssid < cursor_ssid) {
+				for (i = 0; i < 6 - (cursor_ssid - cnt_ssid); i++)
+					lcd.print(" ");
+			} else {
+				lcd.print("     ");
+			}
+			lcd.print(str);
+		} else if ((cnt_ssid - cursor_ssid) < MAX_LCD_SSID_LENGTH) {
+			for (i = 0; i < MAX_LCD_SSID_LENGTH - (cnt_ssid - cursor_ssid); i++)
+				lcd.print(" ");
 		}
 	}
 
 	lcd.setCursor(0, 1);
 	lcd.print("IP:");
-	lcd.print(ip.toString());
-	lcd.print("     ");
+	cnt_ip = ip.toString().length();
+	if (cnt_ip < MAX_LCD_IP_LENGTH) {
+		lcd.print(ip.toString());
+		for (i = 0; i < MAX_LCD_IP_LENGTH - cnt_ip; i++)
+			lcd.print(" ");
+	} else {
+		if ((cursor_ip - 5) == cnt_ip) {
+			cursor_ip = 0;
+		}
+		lcd.print(ip.toString().substring(cursor_ip++));
+		if ((cnt_ip - cursor_ip) < MAX_LCD_IP_LENGTH - 5) {
+			if (cnt_ip < cursor_ip) {
+				for (i = 0; i < 6 - (cursor_ip - cnt_ip); i++)
+					lcd.print(" ");
+			} else {
+				lcd.print("     ");
+			}
+			lcd.print(ip.toString());
+		} else if((cnt_ip - cursor_ip) < MAX_LCD_IP_LENGTH) {
+			for (i = 0; i < MAX_LCD_IP_LENGTH - (cnt_ip - cursor_ip); i++)
+				lcd.print(" ");
+		}
+	}
 }
 
 void readPower(void)
 {
-        volt = ina231_read_voltage();
-        watt = ina231_read_power();
-        ampere = ina231_read_current();
+	volt = ina231_read_voltage();
+	watt = ina231_read_power();
+	ampere = ina231_read_current();
 }
 
 void wifi_connection_status(void)
@@ -546,7 +592,7 @@ void pinChanged()
 
 void readSystemReset()
 {
-        if (!digitalRead(BTN_ONOFF) && (btnPress == 1)) {
+	if (!digitalRead(BTN_ONOFF) && (btnPress == 1)) {
 		if (resetCnt++ > 5) {
 			USE_SERIAL.println("System Reset!!");
 			fs_init();
