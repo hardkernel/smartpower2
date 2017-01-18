@@ -10,6 +10,11 @@
 #include <mcp4652.h>
 #include <LiquidCrystal_I2C.h>
 
+#define CONSOLE_PORT 23
+
+WiFiServer logServer(CONSOLE_PORT);
+WiFiClient logClient;
+
 #define USE_SERIAL Serial
 
 #define MAX_LCD_SSID_LENGTH	12
@@ -110,12 +115,46 @@ void setup() {
 	webserver_init();
 
     timerId = timer.setInterval(1000, handler);
+
+    // Log
+    logServer.begin();
+    logServer.setNoDelay(true);
 }
 
 void loop() {
     server.handleClient();
     webSocket.loop();
     timer.run();
+
+
+    if (logServer.hasClient())
+    {
+      // A connection attempt is being made
+      if (!logClient)
+      {
+        // This is the first client to connect
+        logClient = logServer.available();
+      }
+      else
+      {
+        if (!logClient.connected())
+        {
+          // A previous client has disconnected.
+          //  Connect the new client.
+          logClient.stop();
+          logClient = logServer.available();
+        }
+        else
+        {
+          // A client connection is already in use.
+          // Drop the new connection attempt.
+          WiFiClient tempClient = logServer.available();
+          tempClient.stop();
+        }
+      }
+    }
+
+
 }
 
 void webserver_init(void)
@@ -666,6 +705,15 @@ void handler(void)
 			send_data_to_clients(data, HOME);
 		}
 	}
+
+  if (logClient && logClient.connected())
+  {
+    // Report the log info
+    String data = String(volt) + "," + String(ampere) + "," +
+      String(watt, 3) + "," + String(watth/3600, 3) + "\r\n";
+
+    logClient.write(data.c_str());
+  }
 
 	lcd_status();
 	wifi_connection_status();
