@@ -717,7 +717,7 @@ void handler(void)
   if (logClient && logClient.connected())
   {
     // Report the log info
-    String data = String(volt) + "," + String(ampere) + "," +
+    String data = String(volt, 3) + "," + String(ampere, 3) + "," +
       String(watt, 3) + "," + String(watth/3600, 3) + "\r\n";
 
     logClient.write(data.c_str());
