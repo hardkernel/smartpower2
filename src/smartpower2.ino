@@ -130,10 +130,14 @@ void loop() {
     if (logServer.hasClient())
     {
       // A connection attempt is being made
+      USE_SERIAL.printf("A connection attempt is being made.\n");
+
       if (!logClient)
       {
         // This is the first client to connect
         logClient = logServer.available();
+
+        USE_SERIAL.printf("This is the first client to connect.\n");
       }
       else
       {
@@ -143,6 +147,8 @@ void loop() {
           //  Connect the new client.
           logClient.stop();
           logClient = logServer.available();
+
+          USE_SERIAL.printf("A previous client has disconnected.\n");
         }
         else
         {
@@ -150,6 +156,8 @@ void loop() {
           // Drop the new connection attempt.
           WiFiClient tempClient = logServer.available();
           tempClient.stop();
+
+          USE_SERIAL.printf("A client connection is already in use.\n");
         }
       }
     }
@@ -713,6 +721,11 @@ void handler(void)
       String(watt, 3) + "," + String(watth/3600, 3) + "\r\n";
 
     logClient.write(data.c_str());
+
+    while(logClient.available())
+    {
+      logClient.read();
+    }
   }
 
 	lcd_status();
