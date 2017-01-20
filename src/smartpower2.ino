@@ -270,9 +270,11 @@ void handleClientData(uint8_t num, String data)
 		break;
 	case CMD_ONOFF:
 		onoff = data.substring(1).toInt();
+		if (onoff) {
+			volt = watt = ampere = watth = 0;
+		}
 		digitalWrite(POWER, onoff);
 		digitalWrite(POWERLED, LOW);
-		watth = 0;
 		send_data_to_clients(String(CMD_ONOFF) + onoff, HOME, num);
 		break;
 	case SET_VOLTAGE:
@@ -683,7 +685,7 @@ void handler(void)
 {
 	if (onoff == ON) {
 		digitalWrite(POWERLED, D1state = !D1state);
-		if (connectedLCD || connectedWeb) {
+		if (connectedLCD || connectedWeb || logClient) {
 			readPower();
 		}
 	}
@@ -695,14 +697,18 @@ void handler(void)
 			printInfo_LCD();
 	}
 
-	if (connectedWeb) {
-		if (btnChanged) {
-			send_data_to_clients(String(CMD_ONOFF) + onoff, HOME);
-			if (onoff == OFF) {
-				measureWh = 0;
-			}
-			btnChanged = 0;
+	if (btnChanged) {
+		if (onoff == OFF) {
+			watt = volt = ampere = watth = 0;
 		}
+		if (connectedWeb) {
+			send_data_to_clients(String(CMD_ONOFF) + onoff, HOME);
+			measureWh = !onoff;
+		}
+		btnChanged = 0;
+	}
+
+	if (connectedWeb) {
 		if (onoff == ON) {
 			String data = String(DATA_PVI);
 			data += String(watt, 3) + "," + String(volt) + "," + String(ampere);
