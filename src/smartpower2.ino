@@ -338,8 +338,10 @@ void handleClientData(uint8_t num, String data)
 
 void fs_init(void)
 {
+    String ssidTemp = "ssid=\"SmartPower2_" + String(ESP.getChipId(), HEX) + "\"";
+
     File f = SPIFFS.open("/js/settings.js", "w");
-    f.println("ssid=\"sp2\"");
+    f.println(ssidTemp.c_str());
     f.println("ipaddr=\"192.168.4.1\"");
     f.println("passwd=\"12345678\"");
     f.flush();
@@ -348,7 +350,8 @@ void fs_init(void)
 
     File f2 = SPIFFS.open("/txt/settings.txt", "w");
     f2.println("autorun=0");
-    f2.print("voltage=5.00");
+    f2.println("voltage=5.00");
+    f2.println("firstboot=0");
     f2.flush();
     f2.close();
     readHWSettings();
@@ -421,11 +424,44 @@ void readNetworkConfig(void)
     f.close();
 }
 
+bool isFirstBoot()
+{
+  File f = SPIFFS.open("/txt/settings.txt", "r");
+
+  f.seek(0, SeekSet);
+  f.findUntil("firstboot", "\n\r");
+  f.seek(1, SeekCur);
+  int value = f.readStringUntil('\n').toInt();
+
+  bool result;
+  if (value)
+  {
+    result = true;
+  }
+  else
+  {
+    result = false;
+  }
+
+  f.close();
+
+  return result;
+}
+
 void initSmartPower(void)
 {
-    readHWSettings();
+    if (isFirstBoot())
+    {
+      fs_init();
+    }
+    else
+    {
+      readHWSettings();
+      readNetworkConfig();
+    }
+
     onoff = !autorun;
-    readNetworkConfig();
+
 
     mcp4652_write(WRITE_WIPER0, quadraticRegression(setVoltage));
     pinMode(POWER, OUTPUT);
