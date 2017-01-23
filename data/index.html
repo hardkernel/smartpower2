@@ -29,6 +29,7 @@
     var SAVE_SSID = 's';
     var SAVE_IPADDR = 'i';
     var SAVE_PASSWD = 'x';
+    var FW_VERSION = 'f';
 
     var wsUriC = "ws://" + ipaddr + ":81";
     var ws;
@@ -124,7 +125,10 @@
                         $("#btn_measure_watthour").val("start").slider("refresh");
                     }
                     break;
-            }
+		case FW_VERSION:
+		    $("#fwversion").html(data.substring(1));
+		    break;
+		}
         }
 
         ws.onopen = function() {
@@ -157,10 +161,10 @@
                 <div class="ui-block-b">
                 </div>
                 <div class="ui-block-c">
-                    <label for="text-10" style="margin:15px 10px 0 0; text-align:right;">Build date</label>
+                    <label for="text-10" style="margin:15px 10px 0 0; text-align:right;">F/W Version : </label>
                 </div>
                 <div class="ui-block-d">
-                    <input data-mini="true" disabled="disabled" id="text-10" value="161206" type="text">
+                    <div style="margin:15px 0 0 10px;" id="fwversion"></div>
                 </div>
             </div>
         </div>

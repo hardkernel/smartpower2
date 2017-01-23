@@ -39,6 +39,9 @@ WiFiClient logClient;
 #define PAGE_STATE			'p'
 #define DATA_PVI			'd'
 #define MEASUREWATTHOUR		'm'
+#define FW_VERSION			'f'
+
+#define FWversion	1.1
 
 uint8_t onoff = OFF;
 unsigned char measureWh;
@@ -694,6 +697,7 @@ void sendStatus(uint8_t num, uint8_t page)
         webSocket.sendTXT(num, String(CMD_ONOFF) + onoff);
         webSocket.sendTXT(num, String(SET_VOLTAGE) + setVoltage);
         webSocket.sendTXT(num, String(MEASUREWATTHOUR) + measureWh);
+        webSocket.sendTXT(num, String(FW_VERSION) + FWversion);
     } else if (page) {
         webSocket.sendTXT(num, String(SET_AUTORUN) + autorun);
         webSocket.sendTXT(num, String(SAVE_NETWORKS) + String(ssid) + "," +
