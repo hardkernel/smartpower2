@@ -114,8 +114,29 @@
                     if (watth != dataInfo[3]) {
                         watth = dataInfo[3];
                         $("#sevenseg_watthour").sevenSeg({
-                            value: dataInfo[3]
+                            value: watth
                         });
+			if (watth < 10) {
+				$("#sevenseg_watthour").sevenSeg({
+				digits: 4,
+				decimalPlaces: 3
+				});
+			} else if (watth < 100) {
+				$("#sevenseg_watthour").sevenSeg({
+				digits: 4,
+				decimalPlaces: 2
+				});
+			} else if (watth < 1000) {
+				$("#sevenseg_watthour").sevenSeg({
+				digits: 4,
+				decimalPlaces: 1
+				});
+			} else {
+				$("#sevenseg_watthour").sevenSeg({
+				digits: 4,
+				decimalPlaces: 0
+				});
+			}
                     }
                     break;
                 case MEASUREWATTHOUR:

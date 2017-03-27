@@ -41,7 +41,7 @@ WiFiClient logClient;
 #define MEASUREWATTHOUR		'm'
 #define FW_VERSION			'f'
 
-#define FWversion	1.1
+#define FWversion	1.2
 
 uint8_t onoff = OFF;
 unsigned char measureWh;
@@ -511,6 +511,7 @@ void lcd_status(void)
 
 void printPower_LCD(void)
 {
+	double rwatth;
 	lcd.setCursor(0, 0);
 	lcd.print(volt, 3);
 	lcd.print(" V ");
@@ -525,17 +526,18 @@ void printPower_LCD(void)
 	}
 	lcd.print(" W ");
 
-	if (watth < 10) {
-		lcd.print(watth, 3);
+	rwatth = watth/3600;
+	if (rwatth < 10) {
+		lcd.print(rwatth, 3);
 		lcd.print(" ");
-	} else if (watth < 100) {
-		lcd.print(watth, 2);
+	} else if (rwatth < 100) {
+		lcd.print(rwatth, 2);
 		lcd.print(" ");
-	} else if (watth < 1000) {
-		lcd.print(watth, 1);
+	} else if (rwatth < 1000) {
+		lcd.print(rwatth, 1);
 		lcd.print(" ");
 	} else {
-		lcd.print(watth/1000, 0);
+		lcd.print(rwatth/1000, 0);
 		lcd.print(" K");
 	}
 	lcd.print("Wh     ");
@@ -751,7 +753,7 @@ void handler(void)
 	if (connectedWeb) {
 		if (onoff == ON) {
 			String data = String(DATA_PVI);
-			data += String(watt, 3) + "," + String(volt) + "," + String(ampere);
+			data += String(watt, 3) + "," + String(volt, 3) + "," + String(ampere, 3);
 			if (measureWh) {
 				watth += watt;
 			}
