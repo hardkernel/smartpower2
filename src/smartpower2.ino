@@ -41,7 +41,7 @@ WiFiClient logClient;
 #define MEASUREWATTHOUR		'm'
 #define FW_VERSION			'f'
 
-#define FWversion	1.2
+#define FWversion	1.3
 
 uint8_t onoff = OFF;
 unsigned char measureWh;
@@ -66,7 +66,7 @@ double watth;
 
 #define MAX_SRV_CLIENTS 1
 
-ESP8266WebServer server;
+ESP8266WebServer *server;
 WebSocketsServer webSocket = WebSocketsServer(81);
 IPAddress ip = IPAddress(192, 168, 4, 1);
 
@@ -125,7 +125,7 @@ void setup() {
 }
 
 void loop() {
-    server.handleClient();
+    server->handleClient();
     webSocket.loop();
     timer.run();
 
@@ -184,14 +184,14 @@ void webserver_init(void)
     webSocket.begin();
     webSocket.onEvent(webSocketEvent);
 
-    server.on("/list", HTTP_GET, handleFileList);
+    server->on("/list", HTTP_GET, handleFileList);
 
     //use it to load content from SPIFFS
-    server.onNotFound([](){
-        if(!handleFileRead(server.uri()))
-        server.send(404, "text/plain", "FileNotFound");
+    server->onNotFound([](){
+        if(!handleFileRead(server->uri()))
+        server->send(404, "text/plain", "FileNotFound");
     });
-    server.begin();
+    server->begin();
 
     USE_SERIAL.println("HTTP server started");
 }
@@ -210,7 +210,7 @@ String formatBytes(size_t bytes){
 }
 
 String getContentType(String filename) {
-    if(server.hasArg("download")) return "application/octet-stream";
+    if(server->hasArg("download")) return "application/octet-stream";
     else if(filename.endsWith(".htm")) return "text/html";
     else if(filename.endsWith(".html")) return "text/html";
     else if(filename.endsWith(".js")) return "application/javascript";
@@ -231,7 +231,7 @@ bool handleFileRead(String path) {
         if (SPIFFS.exists(pathWithGz))
         path += ".gz";
         File file = SPIFFS.open(path, "r");
-        size_t sent = server.streamFile(file, contentType);
+        size_t sent = server->streamFile(file, contentType);
         file.close();
         return true;
     }
@@ -240,8 +240,8 @@ bool handleFileRead(String path) {
 }
 
 void handleFileList() {
-    if(!server.hasArg("dir")) {server.send(500, "text/plain", "BAD ARGS"); return;}
-    String path = server.arg("dir");
+    if(!server->hasArg("dir")) {server->send(500, "text/plain", "BAD ARGS"); return;}
+    String path = server->arg("dir");
     Serial.println("handleFileList: " + path);
     Dir dir = SPIFFS.openDir(path);
     path = String();
@@ -260,7 +260,7 @@ void handleFileList() {
     }
 
     output += "]";
-    server.send(200, "text/json", output);
+    server->send(200, "text/json", output);
 }
 
 void handleClientData(uint8_t num, String data)
@@ -418,7 +418,7 @@ void readNetworkConfig(void)
     ipaddr[2] = f.readStringUntil('.').toInt();
     ipaddr[3] = f.readStringUntil('"').toInt();
     ip = IPAddress(ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
-    server =  ESP8266WebServer(ip, 80);
+    server =  new ESP8266WebServer(ip, 80);
 
     f.findUntil("passwd", "\n\r");
     f.seek(2, SeekCur);
