@@ -41,7 +41,7 @@ WiFiClient logClient;
 #define MEASUREWATTHOUR		'm'
 #define FW_VERSION			'f'
 
-#define FWversion	1.3
+#define FWversion	1.4
 
 uint8_t onoff = OFF;
 unsigned char measureWh;
@@ -737,6 +737,11 @@ void handler(void)
 {
     if (onoff == ON) {
         digitalWrite(POWERLED, D1state = !D1state);
+        readPower();
+        String data_serial = String(volt, 3) + "," + String(ampere, 3) + "," +
+                             String(watt, 3) + "," + String(watth / 3600, 3) + "\r\n";
+
+        Serial.print(data_serial.c_str());
     }
 
     if (connectedLCD) {
