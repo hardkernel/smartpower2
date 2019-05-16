@@ -1,0 +1,27 @@
+{
+    "name": "SimpleTimer", 
+    "keywords": [
+        "timer"
+    ], 
+    "description": "SimpleTimer Library for Arduino", 
+    "repository": {
+        "type": "git", 
+        "url": "https://github.com/jfturcot/SimpleTimer.git"
+    }, 
+    "frameworks": [
+        "arduino"
+    ], 
+    "platforms": [
+        "atmelavr"
+    ], 
+    "version": "b30890b8f7", 
+    "authors": [
+        {
+            "email": "jf.turcot@gmail.com", 
+            "url": "https://github.com/jfturcot", 
+            "maintainer": false, 
+            "name": "Jean-Francois Turcot"
+        }
+    ], 
+    "id": 419
+}

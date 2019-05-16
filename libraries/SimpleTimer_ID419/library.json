@@ -1,0 +1,12 @@
+{
+  "name": "SimpleTimer",
+  "keywords": "timer",
+  "description": "SimpleTimer Library for Arduino",
+  "repository":
+  {
+     "type": "git",
+     "url": "https://github.com/jfturcot/SimpleTimer.git"
+  },
+  "frameworks": "arduino",
+  "platforms": "atmelavr"
+ }
