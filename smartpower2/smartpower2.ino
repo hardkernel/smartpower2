@@ -41,7 +41,7 @@ WiFiClient logClient;
 #define MEASUREWATTHOUR		'm'
 #define FW_VERSION			'f'
 
-#define FWversion	1.4
+#define FWversion	1.5
 
 uint8_t onoff = OFF;
 unsigned char measureWh;
