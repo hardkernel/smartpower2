@@ -41,7 +41,7 @@ WiFiClient logClient;
 #define MEASUREWATTHOUR		'm'
 #define FW_VERSION			'f'
 
-#define FWversion	1.5
+#define FWversion	1.6
 
 uint8_t onoff = OFF;
 unsigned char measureWh;
@@ -660,7 +660,7 @@ unsigned long currtime;
 unsigned char btnChanged;
 unsigned char resetCnt;
 unsigned char swlock;
-void pinChanged()
+ICACHE_RAM_ATTR void pinChanged()
 {
     if ((millis() - currtime) > 30) {
         swlock = 0;
